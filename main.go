@@ -31,18 +31,31 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
+	var u1 userDetails
+	u1.first_name = "subho"
+	u1.last_name = "banerjee"
 
-	data := getDataById(3, db)
+	data := updateDataInDB(db, 3, u1)
 	fmt.Println(data)
-	// var u1 userDetails
-	// u1.age = 20
-	// u1.email = "bapan@gmail.com"
-	// u1.first_name = "bapan"
-	// u1.last_name = "banerjee"
-	// data := setDataInDB(db, u1)
-	// fmt.Println(data)
+
 }
 
+//Update data Query
+func updateDataInDB(db *sql.DB, id int, ud userDetails) userDetails {
+	sqlUpdate := `
+	UPDATE users
+	SET first_name = $2, last_name = $3
+	WHERE id = $1;
+	`
+	_, err := db.Exec(sqlUpdate, id, ud.first_name, ud.last_name)
+	if err != nil {
+		panic(err)
+	}
+	data := getDataById(db, id)
+	return data
+}
+
+//Set data Query
 func setDataInDB(db *sql.DB, ud userDetails) int {
 	sqlStatement := `
 	  INSERT INTO users (age, email, first_name, last_name)
@@ -58,7 +71,7 @@ func setDataInDB(db *sql.DB, ud userDetails) int {
 }
 
 //Get data Query
-func getDataById(id int, db *sql.DB) userDetails {
+func getDataById(db *sql.DB, id int) userDetails {
 
 	getDataQuery := `
 	SELECT age, email, first_name, last_name FROM users WHERE id=$1;

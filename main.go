@@ -32,12 +32,26 @@ func main() {
 	}
 	defer db.Close()
 	var u1 userDetails
-	u1.first_name = "subho"
-	u1.last_name = "banerjee"
+	u1.first_name = "Bapan"
+	u1.last_name = "Banerjee"
 
-	data := updateDataInDB(db, 3, u1)
-	fmt.Println(data)
+	deleteDataInDB(db, 2)
 
+}
+
+//Delete data Query
+func deleteDataInDB(db *sql.DB, id int) bool {
+	sqlQuery := `
+	DELETE FROM users
+	WHERE id = $1;
+	`
+	_, err := db.Exec(sqlQuery, id)
+	if err != nil {
+		panic(err)
+
+	}
+	fmt.Println("delete success")
+	return true
 }
 
 //Update data Query

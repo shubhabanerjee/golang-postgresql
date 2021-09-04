@@ -72,7 +72,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(uD)
 	response := SetDataInDB(db, uD)
 	data := GetDataById(db, response)
-	rsp.Message = "User Created Successfull"
+	rsp.Message = "User Created Successfully"
 	rsp.Data = []model.UserDetailsResponse{data}
 	err = json.NewEncoder(w).Encode(rsp)
 	if err != nil {

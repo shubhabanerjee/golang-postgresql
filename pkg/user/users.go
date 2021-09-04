@@ -42,16 +42,13 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 	//	w.Write([]byte("ID could not be converted to integer"))
 	//	return
 	//}
-
 	//// error checking
 	//if id >= len(posts) {
 	//	w.WriteHeader(404)
 	//	w.Write([]byte("No post found with specified ID"))
 	//	return
 	//}
-
 	//post := posts[id]
-
 	//w.Header().Set("Content-Type", "application/json")
 	//json.NewEncoder(w).Encode(post)
 }

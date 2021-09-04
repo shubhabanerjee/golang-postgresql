@@ -2,10 +2,9 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -43,36 +42,46 @@ func main() {
 	router := mux.NewRouter()
 
 	// router.HandleFunc("/createUser", createUserDataInDB).Methods("POST")
-	router.HandleFunc("/getUserByID", getUserData).Methods("GET")
+	router.HandleFunc("/user/{id}/", getUserData).Methods("GET")
 	http.ListenAndServe(":8080", router)
 }
 
 func getUserData(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Println(":shubha")
-	d := mux.Vars(r)["id"]
-	fmt.Println("print id:" + d)
-	// get the ID of the post from the route parameter
-	var idParam string = mux.Vars(r)["id"]
-	id, err := strconv.Atoi(idParam)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		// there was an error
-		w.WriteHeader(400)
-		w.Write([]byte("ID could not be converted to integer"))
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("Body: ", string(body))
+	urlParams := mux.Vars(r)
+	id, ok := userParams["id"]
+	if !ok {
+		fmt.Println("ID not found")
 		return
 	}
 
-	// error checking
-	if id >= len(posts) {
-		w.WriteHeader(404)
-		w.Write([]byte("No post found with specified ID"))
-		return
-	}
+	fmt.Println("print id:", id)
+	//// get the ID of the post from the route parameter
+	//var idParam string = mux.Vars(r)["id"]
+	//id, err := strconv.Atoi(idParam)
+	//if err != nil {
+	//	// there was an error
+	//	w.WriteHeader(400)
+	//	w.Write([]byte("ID could not be converted to integer"))
+	//	return
+	//}
 
-	post := posts[id]
+	//// error checking
+	//if id >= len(posts) {
+	//	w.WriteHeader(404)
+	//	w.Write([]byte("No post found with specified ID"))
+	//	return
+	//}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(post)
+	//post := posts[id]
+
+	//w.Header().Set("Content-Type", "application/json")
+	//json.NewEncoder(w).Encode(post)
 }
 
 var posts []userDetails

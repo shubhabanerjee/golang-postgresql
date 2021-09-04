@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/iamshubha/golang-postgresql/pkg/model"
+	"github.com/iamshubha/golang-postgresql/pkg/util"
 )
 
 func GetUserData(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +54,30 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 
 	//w.Header().Set("Content-Type", "application/json")
 	//json.NewEncoder(w).Encode(post)
+}
+
+func CreateUser(w http.ResponseWriter, r *http.Request) {
+	var uD model.UserDetailsResponseGetFromUser
+	var rsp model.ReturnMessage
+	err := json.NewDecoder(r.Body).Decode(&uD)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(uD)
+	db := util.GetDB()
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	fmt.Println(uD)
+	response := SetDataInDB(db, uD)
+	data := GetDataById(db, response)
+	rsp.Message = "User Created Successfull"
+	rsp.Data = []model.UserDetailsResponse{data}
+	err = json.NewEncoder(w).Encode(rsp)
+	if err != nil {
+		panic(err)
+	}
 }
 
 //var posts []UserDetailsResponse

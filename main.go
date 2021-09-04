@@ -2,16 +2,21 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
 type userDetails struct {
-	age        int
-	first_name string
-	last_name  string
-	email      string
+	id         int    `json:"id"`
+	age        int    `json:"age"`
+	first_name string `json:"first_name"`
+	last_name  string `json:"last_name"`
+	email      string `json:"email"`
 }
 
 const (
@@ -34,10 +39,43 @@ func main() {
 	var u1 userDetails
 	u1.first_name = "Bapan"
 	u1.last_name = "Banerjee"
+	getDataById(db, 3)
+	router := mux.NewRouter()
 
-	deleteDataInDB(db, 2)
-
+	// router.HandleFunc("/createUser", createUserDataInDB).Methods("POST")
+	router.HandleFunc("/getUserByID", getUserData).Methods("GET")
+	http.ListenAndServe(":8080", router)
 }
+
+func getUserData(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println(":shubha")
+	d := mux.Vars(r)["id"]
+	fmt.Println("print id:" + d)
+	// get the ID of the post from the route parameter
+	var idParam string = mux.Vars(r)["id"]
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		// there was an error
+		w.WriteHeader(400)
+		w.Write([]byte("ID could not be converted to integer"))
+		return
+	}
+
+	// error checking
+	if id >= len(posts) {
+		w.WriteHeader(404)
+		w.Write([]byte("No post found with specified ID"))
+		return
+	}
+
+	post := posts[id]
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(post)
+}
+
+var posts []userDetails
 
 //Delete data Query
 func deleteDataInDB(db *sql.DB, id int) bool {
@@ -72,9 +110,9 @@ func updateDataInDB(db *sql.DB, id int, ud userDetails) userDetails {
 //Set data Query
 func setDataInDB(db *sql.DB, ud userDetails) int {
 	sqlStatement := `
-	  INSERT INTO users (age, email, first_name, last_name)
-	  VALUES ($1, $2, $3, $4)
-	  RETURNING id`
+	INSERT INTO users (age, email, first_name, last_name)
+	VALUES ($1, $2, $3, $4)
+	RETURNING id`
 	id := 0
 	err := db.QueryRow(sqlStatement, ud.age, ud.email, ud.first_name, ud.last_name).Scan(&id)
 	if err != nil {
@@ -103,3 +141,19 @@ func getDataById(db *sql.DB, id int) userDetails {
 	u1.last_name = last_name
 	return u1
 }
+
+// func createUserDataInDB(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
+// 	w.Header().Set("Access-Control-Allow-Origin", "*")
+// 	w.Header().Set("Access-Control-Allow-Methods", "POST")
+// 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+// 	var p userDetails
+// 	json.NewDecoder(r.Body).Decode(&p)
+// 	fmt.Println(p.email)
+// 	// posts = append(posts, p)
+// 	json.NewEncoder(w).Encode(p)
+
+// }
+
+//Update data Query

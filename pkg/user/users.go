@@ -1,26 +1,27 @@
 package user
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/iamshubha/golang-postgresql/pkg/model"
 )
 
-type User struct {
-	Name    string `json:"name"`
-	Surname string `json:"surname"`
-}
-
 func GetUserData(w http.ResponseWriter, r *http.Request) {
-	var u User
+	var u model.User
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Printf("Hi! my first name is %s and surname is %s\n", u.Name, u.Surname)
+	err = json.NewEncoder(w).Encode(u)
+	if err != nil {
+		panic(err)
+	}
 	urlParams := mux.Vars(r)
 	id, ok := urlParams["id"]
 	if !ok {
@@ -31,7 +32,6 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println(urlParams["country"])
 	country := r.URL.Query().Get("country")
 	fmt.Println("Country: ", country)
-
 	//// get the ID of the post from the route parameter
 	//var idParam string = mux.Vars(r)["id"]
 	//id, err := strconv.Atoi(idParam)
@@ -55,7 +55,7 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 	//json.NewEncoder(w).Encode(post)
 }
 
-//var posts []userDetails
+//var posts []UserDetailsResponse
 //
 ////Delete data Query
 //func DeleteDataInDB(db *sql.DB, id int) bool {
@@ -73,7 +73,7 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 //}
 //
 ////Update data Query
-//func UpdateDataInDB(db *sql.DB, id int, ud userDetails) userDetails {
+//func UpdateDataInDB(db *sql.DB, id int, ud UserDetailsResponse) UserDetailsResponse {
 //	sqlUpdate := `
 //	UPDATE users
 //	SET first_name = $2, last_name = $3
@@ -88,39 +88,40 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 //}
 //
 ////Set data Query
-//func SetDataInDB(db *sql.DB, ud userDetails) int {
-//	sqlStatement := `
-//	INSERT INTO users (age, email, first_name, last_name)
-//	VALUES ($1, $2, $3, $4)
-//	RETURNING id`
-//	id := 0
-//	err := db.QueryRow(sqlStatement, ud.age, ud.email, ud.first_name, ud.last_name).Scan(&id)
-//	if err != nil {
-//		panic(err)
-//	}
-//	fmt.Println("New record ID is:", id)
-//	return id
-//}
+func SetDataInDB(db *sql.DB, ud model.UserDetailsResponseGetFromUser) int {
+	fmt.Println(ud)
+	sqlStatement := `
+	INSERT INTO users (age, email, first_name, last_name)
+	VALUES ($1, $2, $3, $4)
+	RETURNING id`
+	id := 0
+	err := db.QueryRow(sqlStatement, ud.Age, ud.Email, ud.First_name, ud.Last_name).Scan(&id)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("New record ID is:", id)
+	return id
+}
+
 //
 ////Get data Query
-//func GetDataById(db *sql.DB, id int) userDetails {
-//
-//	getDataQuery := `
-//	SELECT age, email, first_name, last_name FROM users WHERE id=$1;
-//	`
-//	var email, first_name, last_name string
-//	var age int
-//	data := db.QueryRow(getDataQuery, id)
-//	// fmt.Println(data)
-//	data.Scan(&age, &email, &first_name, &last_name)
-//	fmt.Println(age, email, first_name, last_name)
-//	var u1 userDetails
-//	u1.age = age
-//	u1.email = email
-//	u1.first_name = first_name
-//	u1.last_name = last_name
-//	return u1
-//}
+func GetDataById(db *sql.DB, id int) model.UserDetailsResponse {
+	var response model.UserDetailsResponse
+	fmt.Println("GetDataById")
+	getDataQuery := `
+	SELECT age, email, first_name, last_name FROM users WHERE id=$1;
+	`
+	var email, first_name, last_name string
+	var age int
+	data := db.QueryRow(getDataQuery, id)
+	// fmt.Println(data)
+	response.Id = id
+	data.Scan(&response.Age, &response.Email, &response.First_name, &response.Last_name)
+	fmt.Println(age, email, first_name, last_name)
+
+	return response
+}
+
 //
 //// func createUserDataInDB(w http.ResponseWriter, r *http.Request) {
 //// 	w.Header().Set("Content-Type", "application/json")
@@ -128,7 +129,7 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 //// 	w.Header().Set("Access-Control-Allow-Origin", "*")
 //// 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 //// 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-//// 	var p userDetails
+//// 	var p UserDetailsResponse
 //// 	json.NewDecoder(r.Body).Decode(&p)
 //// 	fmt.Println(p.email)
 //// 	// posts = append(posts, p)

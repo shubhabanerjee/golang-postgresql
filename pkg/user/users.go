@@ -43,6 +43,52 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("shubha")
+
+	db := util.GetDB()
+	defer db.Close()
+	creds := &model.Credentials{}
+	err := json.NewDecoder(r.Body).Decode(creds)
+	fmt.Println(creds)
+	if err != nil {
+		panic(err)
+	}
+	storedCreds := &model.Credentials{}
+	uid := 0
+	// Get the existing entry present in the database for the given username
+	err = db.QueryRow("SELECT password, id FROM logindb WHERE username=$1", creds.Username).Scan(&storedCreds.Username, &uid)
+
+	// fmt.Println(result)
+	// // We create another instance of `Credentials` to store the credentials we get from the database
+	// // Store the obtained password in `storedCreds`
+	// err = result.Scan(&storedCreds.Password)
+	// fmt.Println(storedCreds.Password)
+	if err != nil {
+		// If an entry with the username does not exist, send an "Unauthorized"(401) status
+		if err == sql.ErrNoRows {
+			panic(err)
+		}
+		panic(err)
+		// If the error is of any other type, send a 500 status
+		// w.WriteHeader(http.StatusInternalServerError)
+		// return
+	}
+
+	// Compare the stored hashed password, with the hashed version of the password that was received
+	if err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(creds.Password)); err != nil {
+		// If the two passwords don't match, return a 401 status
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+	fmt.Println(uid)
+	d := model.UserSignupResponse{}
+	d.Uid = uid
+	d.Message = "Login Success"
+	json.NewEncoder(w).Encode(d)
+	// userDetails := GetDataById(db, uid)
+
+}
+
 func GetUserData(w http.ResponseWriter, r *http.Request) {
 	var u model.User
 	err := json.NewDecoder(r.Body).Decode(&u)

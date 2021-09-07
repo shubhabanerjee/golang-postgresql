@@ -9,7 +9,39 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/iamshubha/golang-postgresql/pkg/model"
 	"github.com/iamshubha/golang-postgresql/pkg/util"
+	"golang.org/x/crypto/bcrypt"
 )
+
+func Signup(w http.ResponseWriter, r *http.Request) {
+	db := util.GetDB()
+	defer db.Close()
+	creds := &model.Credentials{}
+	err := json.NewDecoder(r.Body).Decode(creds)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.Password), 16) //bcrypt.GenerateFromPassword([]byte(creds.Password), 8)
+	if err != nil {
+		panic(err)
+	}
+	sqlQuery := `
+	INSERT INTO logindb (username, password)
+	VALUES ($1, $2)
+	RETURNING id;
+	`
+	uid := model.UserSignupResponse{}
+	err = db.QueryRow(sqlQuery, creds.Username, string(hashedPassword)).Scan(&uid.Uid)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		panic(err)
+	}
+	uid.Message = "Signup Success"
+
+	json.NewEncoder(w).Encode(uid)
+
+}
 
 func GetUserData(w http.ResponseWriter, r *http.Request) {
 	var u model.User

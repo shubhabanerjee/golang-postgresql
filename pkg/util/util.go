@@ -42,13 +42,12 @@ func InitDB(db *sql.DB) {
 
 	sqlQueryfortasktable := `
 	CREATE TABLE IF NOT EXISTS  tasktable (
-		id SERIAL PRIMARY KEY,
+	id SERIAL PRIMARY KEY,
 	userid INTEGER NOT NULL,
 	title TEXT NOT NULL,
 	body TEXT NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	update_on TIMESTAMP NOT NULL
-	
 	);
 	`
 	data, err = db.Exec(sqlQueryfortasktable)

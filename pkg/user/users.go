@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/iamshubha/golang-postgresql/pkg/model"
 	"github.com/iamshubha/golang-postgresql/pkg/util"
@@ -47,7 +49,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("shubha")
+
 	//Get DataBase
 	db := util.GetDB()
 	defer db.Close()
@@ -55,7 +57,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Get request body in creds
 	creds := &model.Credentials{}
 	err := json.NewDecoder(r.Body).Decode(creds)
-	fmt.Println(creds)
+
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -63,10 +65,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	//Get response from postgresql database
 	storedCreds := &model.Credentials{}
 	uid := 0
-
+	//getting data from database
 	err = db.QueryRow("SELECT password, id FROM userlogin WHERE username=$1", creds.Username).Scan(&storedCreds.Password, &uid)
-	fmt.Println(storedCreds.Password)
-	fmt.Println("fucku")
+
 	if err != nil {
 
 		if err == sql.ErrNoRows {
@@ -78,6 +79,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
+	//Compare password
 	err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(creds.Password))
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -90,14 +92,31 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(uid)
 	d := model.UserSignupResponse{}
 	d.Uid = uid
 	d.Message = "Login Success"
+	//response back
 	json.NewEncoder(w).Encode(d)
 
-	// userDetails := GetDataById(db, uid)
+}
 
+func GenerateJWT(email string, id int) (string, error) {
+	var mySigningKey = []byte("secretkey")
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+
+	claims["authorized"] = true
+	claims["email"] = email
+	claims["id"] = id
+	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+
+	tokenString, err := token.SignedString(mySigningKey)
+
+	if err != nil {
+		fmt.Errorf("Something Went Wrong: %s", err.Error())
+		return "", err
+	}
+	return tokenString, nil
 }
 
 func GetUserData(w http.ResponseWriter, r *http.Request) {

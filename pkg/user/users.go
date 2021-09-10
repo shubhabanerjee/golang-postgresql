@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -12,6 +13,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type DB *sql.DB
+
 func Signup(w http.ResponseWriter, r *http.Request) {
 	db := util.GetDB()
 	defer db.Close()
@@ -19,15 +22,15 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(creds)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		log.Fatal(err)
 
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.Password), 8) //bcrypt.GenerateFromPassword([]byte(creds.Password), 8)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	sqlQuery := `
-	INSERT INTO logindb (username, password)
+	INSERT INTO userlogin (username, password)
 	VALUES ($1, $2)
 	RETURNING id;
 	`
@@ -35,7 +38,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	err = db.QueryRow(sqlQuery, creds.Username, string(hashedPassword)).Scan(&uid.Uid)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		panic(err)
+		log.Fatal(err)
 	}
 	uid.Message = "Signup Success"
 
@@ -45,40 +48,54 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("shubha")
-
+	//Get DataBase
 	db := util.GetDB()
 	defer db.Close()
+
+	// Get request body in creds
 	creds := &model.Credentials{}
 	err := json.NewDecoder(r.Body).Decode(creds)
 	fmt.Println(creds)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
+	//Get response from postgresql database
 	storedCreds := &model.Credentials{}
 	uid := 0
-	err = db.QueryRow("SELECT password, id FROM logindb WHERE username=$1", creds.Username).Scan(&storedCreds.Password, &uid)
 
+	err = db.QueryRow("SELECT password, id FROM userlogin WHERE username=$1", creds.Username).Scan(&storedCreds.Password, &uid)
+	fmt.Println(storedCreds.Password)
+	fmt.Println("fucku")
 	if err != nil {
 
 		if err == sql.ErrNoRows {
-			panic(err)
+			log.Fatal(err)
+			return
 		}
-		panic(err)
+		log.Fatal(err)
+		return
 
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(creds.Password))
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-
-	} else {
-
-		fmt.Println(uid)
-		d := model.UserSignupResponse{}
-		d.Uid = uid
-		d.Message = "Login Success"
+		d := struct {
+			Message string `json:"message"`
+		}{
+			Message: "Wrong Password!",
+		}
 		json.NewEncoder(w).Encode(d)
+		return
 	}
+
+	fmt.Println(uid)
+	d := model.UserSignupResponse{}
+	d.Uid = uid
+	d.Message = "Login Success"
+	json.NewEncoder(w).Encode(d)
+
 	// userDetails := GetDataById(db, uid)
 
 }
@@ -93,7 +110,8 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Hi! my first name is %s and surname is %s\n", u.Name, u.Surname)
 	err = json.NewEncoder(w).Encode(u)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 	urlParams := mux.Vars(r)
 	id, ok := urlParams["id"]
@@ -130,12 +148,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var rsp model.ReturnMessage
 	err := json.NewDecoder(r.Body).Decode(&uD)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 	fmt.Println(uD)
 	db := util.GetDB()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 	defer db.Close()
 	fmt.Println(uD)
@@ -145,7 +165,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	rsp.Data = []model.UserDetailsResponse{data}
 	err = json.NewEncoder(w).Encode(rsp)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 }
 
@@ -159,7 +180,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 //	`
 //	_, err := db.Exec(sqlQuery, id)
 //	if err != nil {
-//		panic(err)
+//		log.Fatal(err)
 //
 //	}
 //	fmt.Println("delete success")
@@ -175,7 +196,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 //	`
 //	_, err := db.Exec(sqlUpdate, id, ud.first_name, ud.last_name)
 //	if err != nil {
-//		panic(err)
+//		log.Fatal(err)
 //	}
 //	data := getDataById(db, id)
 //	return data

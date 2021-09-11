@@ -4,12 +4,120 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/iamshubha/golang-postgresql/pkg/model"
 	"github.com/iamshubha/golang-postgresql/pkg/util"
+	"golang.org/x/crypto/bcrypt"
 )
+
+type DB *sql.DB
+
+func Signup(w http.ResponseWriter, r *http.Request) {
+	db := util.GetDB()
+	defer db.Close()
+	creds := &model.Credentials{}
+	err := json.NewDecoder(r.Body).Decode(creds)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Fatal(err)
+
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.Password), 8) //bcrypt.GenerateFromPassword([]byte(creds.Password), 8)
+	if err != nil {
+		log.Fatal(err)
+	}
+	sqlQuery := `
+	INSERT INTO userlogin (username, password)
+	VALUES ($1, $2)
+	RETURNING id;
+	`
+	uid := model.UserSignupResponse{}
+	err = db.QueryRow(sqlQuery, creds.Username, string(hashedPassword)).Scan(&uid.Uid)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Fatal(err)
+	}
+	uid.Message = "Signup Success"
+
+	json.NewEncoder(w).Encode(uid)
+
+}
+
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+
+	//Get DataBase
+	db := util.GetDB()
+	defer db.Close()
+
+	// Get request body in creds
+	creds := &model.Credentials{}
+	err := json.NewDecoder(r.Body).Decode(creds)
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	//Get response from postgresql database
+	storedCreds := &model.Credentials{}
+	uid := 0
+	//getting data from database
+	err = db.QueryRow("SELECT password, id FROM userlogin WHERE username=$1", creds.Username).Scan(&storedCreds.Password, &uid)
+
+	if err != nil {
+
+		if err == sql.ErrNoRows {
+			log.Fatal(err)
+			return
+		}
+		log.Fatal(err)
+		return
+
+	}
+
+	//Compare password
+	err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(creds.Password))
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		d := struct {
+			Message string `json:"message"`
+		}{
+			Message: "Wrong Password!",
+		}
+		json.NewEncoder(w).Encode(d)
+		return
+	}
+
+	d := model.UserSignupResponse{}
+	d.Uid = uid
+	d.Message = "Login Success"
+	//response back
+	json.NewEncoder(w).Encode(d)
+
+}
+
+func GenerateJWT(email string, id int) (string, error) {
+	var mySigningKey = []byte("secretkey")
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+
+	claims["authorized"] = true
+	claims["email"] = email
+	claims["id"] = id
+	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+
+	tokenString, err := token.SignedString(mySigningKey)
+
+	if err != nil {
+		fmt.Errorf("Something Went Wrong: %s", err.Error())
+		return "", err
+	}
+	return tokenString, nil
+}
 
 func GetUserData(w http.ResponseWriter, r *http.Request) {
 	var u model.User
@@ -21,7 +129,8 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Hi! my first name is %s and surname is %s\n", u.Name, u.Surname)
 	err = json.NewEncoder(w).Encode(u)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 	urlParams := mux.Vars(r)
 	id, ok := urlParams["id"]
@@ -42,16 +151,13 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 	//	w.Write([]byte("ID could not be converted to integer"))
 	//	return
 	//}
-
 	//// error checking
 	//if id >= len(posts) {
 	//	w.WriteHeader(404)
 	//	w.Write([]byte("No post found with specified ID"))
 	//	return
 	//}
-
 	//post := posts[id]
-
 	//w.Header().Set("Content-Type", "application/json")
 	//json.NewEncoder(w).Encode(post)
 }
@@ -61,12 +167,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var rsp model.ReturnMessage
 	err := json.NewDecoder(r.Body).Decode(&uD)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 	fmt.Println(uD)
 	db := util.GetDB()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 	defer db.Close()
 	fmt.Println(uD)
@@ -76,7 +184,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	rsp.Data = []model.UserDetailsResponse{data}
 	err = json.NewEncoder(w).Encode(rsp)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 }
 
@@ -90,7 +199,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 //	`
 //	_, err := db.Exec(sqlQuery, id)
 //	if err != nil {
-//		panic(err)
+//		log.Fatal(err)
 //
 //	}
 //	fmt.Println("delete success")
@@ -106,7 +215,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 //	`
 //	_, err := db.Exec(sqlUpdate, id, ud.first_name, ud.last_name)
 //	if err != nil {
-//		panic(err)
+//		log.Fatal(err)
 //	}
 //	data := getDataById(db, id)
 //	return data

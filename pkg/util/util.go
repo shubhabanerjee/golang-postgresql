@@ -3,6 +3,7 @@ package util
 import (
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 const (
@@ -21,6 +22,38 @@ func GetDB() *sql.DB {
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
 	return db
+}
+
+func InitDB(db *sql.DB) {
+	sqlQueryforlogintable := `
+	CREATE TABLE IF NOT EXISTS userlogin (
+		id SERIAL PRIMARY KEY,
+		userName TEXT NOT NULL,
+		password TEXT NOT NULL
+	);	
+	`
+	data, err := db.Exec(sqlQueryforlogintable)
+	defer db.Close()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(data)
+
+	sqlQueryfortasktable := `
+	CREATE TABLE IF NOT EXISTS  tasktable (
+	id SERIAL PRIMARY KEY,
+	userid INTEGER NOT NULL,
+	title TEXT NOT NULL,
+	body TEXT NOT NULL,
+	created_at TIMESTAMP NOT NULL,
+	update_on TIMESTAMP NOT NULL
+	);
+	`
+	data, err = db.Exec(sqlQueryfortasktable)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(data)
 }

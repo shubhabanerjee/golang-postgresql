@@ -1,5 +1,10 @@
 package model
 
+type UserSignupResponse struct {
+	Message string `json:"message"`
+	Uid     int    `json:"id"`
+}
+
 type UserDetailsResponse struct {
 	Id         int    `json:"id"`
 	Age        int    `json:"age"`
@@ -22,4 +27,9 @@ type User struct {
 type ReturnMessage struct {
 	Message string                `json:"message"`
 	Data    []UserDetailsResponse `json:"data"`
+}
+
+type Credentials struct {
+	Password string `json:"password", db:"password"`
+	Username string `json:"username", db:"username"`
 }

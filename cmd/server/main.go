@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -15,10 +18,10 @@ func main() {
 	util.InitDB(db)
 	defer db.Close()
 	router := mux.NewRouter()
-	router.HandleFunc("/user", user.GetUserData).Methods("POST")
+	// router.HandleFunc("/user", user.GetUserData).Methods("POST")
 	router.HandleFunc("/createTask", task.CreateTask).Methods("POST")
-
-	router.HandleFunc("/userCreate", user.CreateUser).Methods("POST")
+	router.HandleFunc("/tasks/{id}", task.GetTask).Methods("GET")
+	// router.HandleFunc("/userCreate", user.CreateUser).Methods("POST")
 	router.HandleFunc("/login", user.LoginHandler).Methods("POST")
 	router.HandleFunc("/signup", user.Signup).Methods("POST")
 	http.ListenAndServe(":8080", router)
@@ -29,26 +32,37 @@ func main() {
 	// }
 	// fmt.Println(data)
 }
+func Tasks(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Println(body)
+	urlparams := mux.Vars(r)
+	id, ok := urlparams["id"]
+	fmt.Println("sssssssssssss")
+	if !ok {
+		log.Println(ok)
+	}
+	fmt.Println("sssssssssssss----------")
+	fmt.Println(id)
+}
 
 // func GenerateJWT(email string, id int) (string, error) {
 // 	var mySigningKey = []byte("secretkey")
 // 	token := jwt.New(jwt.SigningMethodHS256)
 // 	claims := token.Claims.(jwt.MapClaims)
-
 // 	claims["authorized"] = true
 // 	claims["email"] = email
 // 	claims["id"] = id
 // 	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
-
 // 	tokenString, err := token.SignedString(mySigningKey)
-
 // 	if err != nil {
 // 		fmt.Errorf("Something Went Wrong: %s", err.Error())
 // 		return "", err
 // 	}
 // 	return tokenString, nil
 // }
-
 // func getdata() {
 // 	db := util.GetDB()
 // 	defer db.Close()
@@ -66,7 +80,6 @@ func main() {
 // 		Title      string `json:"title"`
 // 	}
 // 	dd := d{}
-
 // 	data := db.QueryRow(q).Scan(&dd.userid, &dd.Title, &dd.Body, &dd.created_at, &dd.update_on, &dd.Uid)
 // 	fmt.Println(data)
 // 	fmt.Println(dd)
@@ -80,13 +93,10 @@ func main() {
 // 	}
 // 	defer ddddataRow.Close()
 // 	snbs := make([]d, 0)
-
 // 	for ddddataRow.Next() {
 // 		ddd := d{}
 // 		ddddataRow.Scan(&ddd.userid, &ddd.Title, &ddd.Body, &ddd.created_at, &ddd.update_on, &ddd.Uid)
 // 		snbs = append(snbs, ddd)
 // 	}
-
 // 	fmt.Println(snbs)
-
 // }

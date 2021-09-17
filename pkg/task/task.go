@@ -17,7 +17,7 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 	creds := &model.TaskCreateFormat{}
 	err := json.NewDecoder(r.Body).Decode(creds)
-	if creds.Uid == 0 || creds.Body == "" || creds.Title == "" {
+	if creds.Uid == 0 || creds.Body == "" || creds.Title == "" || creds.Bucket == "" {
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": "Please send correct parameaters",
 		})
@@ -28,11 +28,11 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sqlQuery := `
-	INSERT INTO tasktable (userid, title, body, created_at, update_on)
-	VALUES ($1,$2,$3,$4,$5) 
+	INSERT INTO tasktable (userid, bucket, title, body, created_at, update_on)
+	VALUES ($1,$2,$3,$4,$5,$6) 
 	RETURNING id;
 	`
-	_, err = db.Exec(sqlQuery, creds.Uid, creds.Title, creds.Body, time.Now(), time.Now())
+	_, err = db.Exec(sqlQuery, creds.Uid, creds.Bucket, creds.Title, creds.Body, time.Now(), time.Now())
 	if err != nil {
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": "Fail",

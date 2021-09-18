@@ -45,7 +45,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-
 	//Get DataBase
 	db := util.GetDB()
 	defer db.Close()
@@ -55,7 +54,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(creds)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
+	}
+	if creds.Password == "" || creds.Username == "" {
+		log.Println("noting")
 		return
 	}
 	//Get response from postgresql database
@@ -65,12 +68,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err = db.QueryRow("SELECT password, id FROM userlogin WHERE username=$1", creds.Username).Scan(&storedCreds.Password, &uid)
 
 	if err != nil {
-
 		if err == sql.ErrNoRows {
-			log.Fatal(err)
+			log.Println(err)
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(map[string]string{
+				"Message": "No User Found !",
+			})
 			return
 		}
-		log.Fatal(err)
+		log.Println("no data found")
+		log.Println(err)
 		return
 
 	}

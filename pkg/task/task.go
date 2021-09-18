@@ -61,7 +61,8 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 
 	dataRow, err := db.Query(sqlQuery, id)
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		return
 	}
 	defer dataRow.Close()
 	data := make([]model.GetTaskData, 0)
@@ -69,6 +70,13 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 		ddd := model.GetTaskData{}
 		dataRow.Scan(&ddd.Title, &ddd.Body)
 		data = append(data, ddd)
+	}
+	if len(data) == 0 {
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "No data found on this user",
+		})
+		return
 	}
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "success",

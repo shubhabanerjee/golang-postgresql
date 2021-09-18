@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -20,7 +17,7 @@ func main() {
 	router := mux.NewRouter()
 	// router.HandleFunc("/user", user.GetUserData).Methods("POST")
 	router.HandleFunc("/createTask", task.CreateTask).Methods("POST")
-	router.HandleFunc("/tasks/{id}", task.GetTask).Methods("GET")
+	router.HandleFunc("/tasks/id:{id}", task.GetTask).Methods("GET")
 	// router.HandleFunc("/userCreate", user.CreateUser).Methods("POST")
 	router.HandleFunc("/login", user.LoginHandler).Methods("POST")
 	router.HandleFunc("/signup", user.Signup).Methods("POST")
@@ -32,21 +29,21 @@ func main() {
 	// }
 	// fmt.Println(data)
 }
-func Tasks(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Println(err)
-	}
-	fmt.Println(body)
-	urlparams := mux.Vars(r)
-	id, ok := urlparams["id"]
-	fmt.Println("sssssssssssss")
-	if !ok {
-		log.Println(ok)
-	}
-	fmt.Println("sssssssssssss----------")
-	fmt.Println(id)
-}
+
+//Get filtered query
+//SELECT * FROM tasktable WHERE userid = 1 AND title = 'n';
+// func Tasks(w http.ResponseWriter, r *http.Request) {
+// 	body, err := ioutil.ReadAll(r.Body)
+// 	if err != nil {
+// 		log.Println(err)
+// 	}
+// 	fmt.Println(body)
+// 	urlparams := mux.Vars(r)
+// 	id, ok := urlparams["id"]
+// 	if !ok {
+// 		log.Println(ok)
+// 	}
+// }
 
 // func GenerateJWT(email string, id int) (string, error) {
 // 	var mySigningKey = []byte("secretkey")

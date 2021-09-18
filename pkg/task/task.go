@@ -85,6 +85,53 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(data)
 }
 
+func GetTaskFromBucket(w http.ResponseWriter, r *http.Request) {
+
+	urlData := mux.Vars(r)
+	id, ok := urlData["id"]
+	if !ok {
+		log.Println(ok)
+		w.WriteHeader(400)
+		return
+	}
+	bucket, ok := urlData["bucket"]
+	if !ok {
+		log.Println(ok)
+		w.WriteHeader(400)
+		return
+	}
+	db := util.GetDB()
+	defer db.Close()
+	sqlQuery := `
+	SELECT title, body FROM tasktable WHERE userid = $1 AND bucket = $2;
+	`
+
+	dataRow, err := db.Query(sqlQuery, id, bucket)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer dataRow.Close()
+	data := make([]model.GetTaskData, 0)
+	for dataRow.Next() {
+		ddd := model.GetTaskData{}
+		dataRow.Scan(&ddd.Title, &ddd.Body)
+		data = append(data, ddd)
+	}
+	if len(data) == 0 {
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "No data found on this user",
+		})
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "success",
+		"data":    data,
+	})
+	fmt.Println(data)
+}
+
 /*
 	tasktable =>
 

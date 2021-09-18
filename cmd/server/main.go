@@ -18,6 +18,7 @@ func main() {
 	// router.HandleFunc("/user", user.GetUserData).Methods("POST")
 	router.HandleFunc("/createTask", task.CreateTask).Methods("POST")
 	router.HandleFunc("/tasks/id:{id}", task.GetTask).Methods("GET")
+	router.HandleFunc("/GetTaskFromBucket/id:{id}/bucket:{bucket}", task.GetTaskFromBucket).Methods("GET")
 	// router.HandleFunc("/userCreate", user.CreateUser).Methods("POST")
 	router.HandleFunc("/login", user.LoginHandler).Methods("POST")
 	router.HandleFunc("/signup", user.Signup).Methods("POST")

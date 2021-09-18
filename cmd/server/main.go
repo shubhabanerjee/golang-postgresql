@@ -20,16 +20,10 @@ func main() {
 	router.HandleFunc("/updateTask", task.UpdateTask).Methods("POST")
 	router.HandleFunc("/tasks/id:{id}", task.GetTask).Methods("GET")
 	router.HandleFunc("/GetTaskFromBucket/id:{id}/bucket:{bucket}", task.GetTaskFromBucket).Methods("GET")
-	// router.HandleFunc("/userCreate", user.CreateUser).Methods("POST")
 	router.HandleFunc("/login", user.LoginHandler).Methods("POST")
 	router.HandleFunc("/signup", user.Signup).Methods("POST")
 	http.ListenAndServe(":8080", router)
-	// data, err := GenerateJWT("ssssssss@gmail.com", 90)
-	// if err != nil {
-	// 	log.Print(err)
-	// 	return
-	// }
-	// fmt.Println(data)
+	
 }
 
 //Get filtered query

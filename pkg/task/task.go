@@ -15,7 +15,7 @@ import (
 func CreateTask(w http.ResponseWriter, r *http.Request) {
 	db := util.GetDB()
 	defer db.Close()
-	creds := &model.TaskCreateFormat{}
+	creds := &model.TaskFormat{}
 	err := json.NewDecoder(r.Body).Decode(creds)
 	if creds.Uid == 0 || creds.Body == "" || creds.Title == "" || creds.Bucket == "" {
 		json.NewEncoder(w).Encode(map[string]string{
@@ -130,6 +130,41 @@ func GetTaskFromBucket(w http.ResponseWriter, r *http.Request) {
 		"data":    data,
 	})
 	fmt.Println(data)
+}
+
+func UpdateTask(w http.ResponseWriter, r *http.Request) {
+	dataModel := model.TaskUpdateFormat{}
+	db := util.GetDB()
+	defer db.Close()
+	err := json.NewDecoder(r.Body).Decode(&dataModel)
+	if err != nil {
+		w.WriteHeader(400)
+		log.Println(err)
+		return
+	}
+	fmt.Println(dataModel)
+	if dataModel.Body == "" || dataModel.Bucket == "" || dataModel.Title == "" || dataModel.Uid == 0 || dataModel.Id == 0 {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "parameter cann't be empty",
+		})
+		return
+	}
+	sqlQuery := `
+	UPDATE tasktable SET title = $1, body = $2, update_on = $3 WHERE userid = $4 AND id = $5;
+	`
+	_, err = db.Query(sqlQuery, dataModel.Title, dataModel.Body, time.Now(), dataModel.Uid, dataModel.Id)
+
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Fail",
+		})
+		log.Print(err)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "success",
+	})
 }
 
 /*

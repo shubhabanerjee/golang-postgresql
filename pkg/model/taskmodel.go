@@ -1,6 +1,6 @@
 package model
 
-type TaskCreateFormat struct {
+type TaskFormat struct {
 	Uid    int    `json:"id"`
 	Body   string `json:"body"`
 	Title  string `json:"title"`
@@ -10,4 +10,12 @@ type TaskCreateFormat struct {
 type GetTaskData struct {
 	Body  string `json:"body"`
 	Title string `json:"title"`
+}
+
+type TaskUpdateFormat struct {
+	Id     int    `json:"id"`
+	Uid    int    `json:"userid"`
+	Body   string `json:"body"`
+	Title  string `json:"title"`
+	Bucket string `json:"bucket"`
 }

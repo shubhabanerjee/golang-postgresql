@@ -17,7 +17,9 @@ func main() {
 	router := mux.NewRouter()
 	// router.HandleFunc("/user", user.GetUserData).Methods("POST")
 	router.HandleFunc("/createTask", task.CreateTask).Methods("POST")
+	router.HandleFunc("/updateTask", task.UpdateTask).Methods("POST")
 	router.HandleFunc("/tasks/id:{id}", task.GetTask).Methods("GET")
+	router.HandleFunc("/GetTaskFromBucket/id:{id}/bucket:{bucket}", task.GetTaskFromBucket).Methods("GET")
 	// router.HandleFunc("/userCreate", user.CreateUser).Methods("POST")
 	router.HandleFunc("/login", user.LoginHandler).Methods("POST")
 	router.HandleFunc("/signup", user.Signup).Methods("POST")
@@ -67,7 +69,7 @@ func main() {
 // 	q := `
 // 	SELECT * FROM tasktable WHERE userid = 2;
 // 	`
-// 	// d := model.TaskCreateFormat{}
+// 	// d := model.TaskFormat{}
 // 	type d struct {
 // 		userid     int    `json:"userid"`
 // 		created_at string `json:"created_at"`

@@ -21,7 +21,15 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Fatal(err)
+		return
 
+	}
+	if creds.Password == "" || creds.Username == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Invalid request",
+		})
+		return
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.Password), 8) //bcrypt.GenerateFromPassword([]byte(creds.Password), 8)
 	if err != nil {

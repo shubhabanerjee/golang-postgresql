@@ -44,6 +44,7 @@ func InitDB(db *sql.DB) {
 	CREATE TABLE IF NOT EXISTS  tasktable (
 	id SERIAL PRIMARY KEY,
 	userid INTEGER NOT NULL,
+	bucket TEXT NOT NULL,
 	title TEXT NOT NULL,
 	body TEXT NOT NULL,
 	created_at TIMESTAMP NOT NULL,

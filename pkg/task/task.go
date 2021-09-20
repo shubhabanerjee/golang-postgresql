@@ -167,6 +167,38 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func DeleteTask(w http.ResponseWriter, r *http.Request) {
+	sqlQuery := `
+	DELETE FROM tasktable
+	WHERE  userid = $1 AND id = $2;
+	`
+	db := util.GetDB()
+	defer db.Close()
+	type userDetails struct {
+		Id     int `json:"id"`
+		Userid int `json:"userid"`
+	}
+	d := userDetails{}
+	err := json.NewDecoder(r.Body).Decode(&d)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	_, err = db.Exec(sqlQuery, d.Userid, d.Id)
+	if err != nil {
+		log.Println(err)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Fail",
+		})
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Succes",
+	})
+
+}
+
 /*
 	tasktable =>
 

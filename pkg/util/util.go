@@ -33,12 +33,11 @@ func InitDB(db *sql.DB) {
 		password TEXT NOT NULL
 	);	
 	`
-	data, err := db.Exec(sqlQueryforlogintable)
+	_, err := db.Exec(sqlQueryforlogintable)
 	defer db.Close()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Println(data)
 
 	sqlQueryfortasktable := `
 	CREATE TABLE IF NOT EXISTS  tasktable (
@@ -51,10 +50,24 @@ func InitDB(db *sql.DB) {
 	update_on TIMESTAMP NOT NULL
 	);
 	`
-	data, err = db.Exec(sqlQueryfortasktable)
+	_, err = db.Exec(sqlQueryfortasktable)
 
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Println(data)
+	sqlQueryforGoleSetTable := `
+	CREATE TABLE IF NOT EXISTS goletable (
+	id SERIAL PRIMARY KEY,
+	userid INTEGER NOT NULL,
+	workon TEXT NOT NULL,
+	starttime TIMESTAMP NOT NULL,
+	stoptime TIMESTAMP NOT NULL,
+	total TIMESTAMP NOT NULL
+	);
+	`
+	_, err = db.Exec(sqlQueryforGoleSetTable)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(sqlQueryforGoleSetTable)
 }

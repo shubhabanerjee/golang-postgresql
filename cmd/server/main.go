@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+
 func main() {
 	db := util.GetDB()
 	util.InitDB(db)

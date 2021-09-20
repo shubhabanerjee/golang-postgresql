@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/iamshubha/golang-postgresql/pkg/gole"
 	"github.com/iamshubha/golang-postgresql/pkg/task"
 	"github.com/iamshubha/golang-postgresql/pkg/user"
 	"github.com/iamshubha/golang-postgresql/pkg/util"
@@ -15,22 +16,18 @@ func main() {
 	util.InitDB(db)
 	defer db.Close()
 	router := mux.NewRouter()
-	// router.HandleFunc("/user", user.GetUserData).Methods("POST")
 	//TODO:forget, delete note
-	router.HandleFunc("/deleteNote", task.DeleteTask).Methods("POST")
-	router.HandleFunc("/createNote", task.CreateTask).Methods("POST")
-	router.HandleFunc("/updateTask", task.UpdateTask).Methods("POST")
-	router.HandleFunc("/notes/userid:{id}", task.GetTask).Methods("GET")
-	router.HandleFunc("/GetNoteFromBucket/id:{id}/bucket:{bucket}", task.GetTaskFromBucket).Methods("GET")
-	router.HandleFunc("/login", user.LoginHandler).Methods("POST")
-	router.HandleFunc("/signup", user.Signup).Methods("POST")
+	router.HandleFunc("/deleteNote", task.DeleteTask).Methods(http.MethodPost)
+	router.HandleFunc("/createNote", task.CreateTask).Methods(http.MethodPost)
+	router.HandleFunc("/updateTask", task.UpdateTask).Methods(http.MethodPost)
+	router.HandleFunc("/notes/userid:{id}", task.GetTask).Methods(http.MethodGet)
+	router.HandleFunc("/GetNoteFromBucket/id:{id}/bucket:{bucket}", task.GetTaskFromBucket).Methods(http.MethodGet)
+	router.HandleFunc("/login", user.LoginHandler).Methods(http.MethodPost)
+	router.HandleFunc("/signup", user.Signup).Methods(http.MethodPost)
+	router.HandleFunc("/startWorking", gole.StartWorking).Methods(http.MethodPost)
+	router.HandleFunc("/stopWorking", gole.StopWorking).Methods(http.MethodPost)
 	http.ListenAndServe(":8080", router)
-	// data, err := GenerateJWT("ssssssss@gmail.com", 90)
-	// if err != nil {
-	// 	log.Print(err)
-	// 	return
-	// }
-	// fmt.Println(data)
+
 }
 
 //Get filtered query

@@ -61,8 +61,8 @@ func InitDB(db *sql.DB) {
 	userid INTEGER NOT NULL,
 	workon TEXT NOT NULL,
 	starttime TIMESTAMP NOT NULL,
-	stoptime TIMESTAMP NOT NULL,
-	total TIMESTAMP NOT NULL
+	stoptime TIMESTAMP,
+	total TIMESTAMP 
 	);
 	`
 	_, err = db.Exec(sqlQueryforGoleSetTable)

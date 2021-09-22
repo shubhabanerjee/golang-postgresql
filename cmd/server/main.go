@@ -28,6 +28,7 @@ func main() {
 	router.HandleFunc("/startWorking", gole.StartWorking).Methods(http.MethodPost)
 	router.HandleFunc("/stopWorking", gole.StopWorking).Methods(http.MethodPost)
 	router.HandleFunc("/deleteGole", gole.DeleteWorking).Methods(http.MethodDelete)
+	router.HandleFunc("/getWorkIteam/userId:{id}", gole.GetWorkiteams).Methods(http.MethodGet)
 	http.ListenAndServe(":8080", router)
 
 }

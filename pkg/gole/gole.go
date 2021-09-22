@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/iamshubha/golang-postgresql/pkg/model"
 	"github.com/iamshubha/golang-postgresql/pkg/util"
 )
@@ -77,6 +78,37 @@ func StopWorking(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func GetWorkiteams(w http.ResponseWriter, r *http.Request) {
+
+	urlData := mux.Vars(r)
+	id, ok := urlData["id"]
+	if !ok {
+		log.Println(ok)
+	}
+	// log.Println(data, goleDetailsModel)
+	db := util.GetDB()
+	defer db.Close()
+	sqlQuery := `
+	SELECT * FROM goletable WHERE userid =$1;
+	`
+	dataRows, err := db.Query(sqlQuery, id)
+	if err != nil {
+		log.Println(err)
+	}
+	defer dataRows.Close()
+	data := make([]model.GoleDetails, 0)
+	for dataRows.Next() {
+		goleDetailsModel := model.GoleDetails{}
+		dataRows.Scan(&goleDetailsModel.Id, &goleDetailsModel.Userid, &goleDetailsModel.Workon, &goleDetailsModel.Starttime, &goleDetailsModel.Stoptime, &goleDetailsModel.Total)
+		data = append(data, goleDetailsModel)
+	}
+	log.Println(data)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "data found",
+		"data":    data,
+	})
+}
+
 func DeleteWorking(w http.ResponseWriter, r *http.Request) {
 	userdetails := model.IdAndUserid{}
 	err := json.NewDecoder(r.Body).Decode(&userdetails)
@@ -101,5 +133,4 @@ func DeleteWorking(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Success",
 	})
-
 }

@@ -27,6 +27,7 @@ func main() {
 	router.HandleFunc("/forgetPassword", user.ForgetPassword).Methods(http.MethodPost)
 	router.HandleFunc("/startWorking", gole.StartWorking).Methods(http.MethodPost)
 	router.HandleFunc("/stopWorking", gole.StopWorking).Methods(http.MethodPost)
+	router.HandleFunc("/deleteGole", gole.DeleteWorking).Methods(http.MethodDelete)
 	http.ListenAndServe(":8080", router)
 
 }

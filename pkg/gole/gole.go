@@ -46,12 +46,7 @@ func StartWorking(w http.ResponseWriter, r *http.Request) {
 
 func StopWorking(w http.ResponseWriter, r *http.Request) {
 
-	type stopWork struct {
-		Id     int `json:"id"`
-		UserId int `json:"userid"`
-	}
-
-	golemodel := stopWork{}
+	golemodel := model.IdAndUserid{}
 	db := util.GetDB()
 	defer db.Close()
 	err := json.NewDecoder(r.Body).Decode(&golemodel)
@@ -80,4 +75,31 @@ func StopWorking(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "success",
 	})
+}
+
+func DeleteWorking(w http.ResponseWriter, r *http.Request) {
+	userdetails := model.IdAndUserid{}
+	err := json.NewDecoder(r.Body).Decode(&userdetails)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	sqlQuery := `
+	DELETE FROM goletable
+	WHERE  userid = $1 AND id = $2;
+	`
+
+	db := util.GetDB()
+	defer db.Close()
+	_, err = db.Exec(sqlQuery, userdetails.UserId, userdetails.Id)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Success",
+	})
+
 }

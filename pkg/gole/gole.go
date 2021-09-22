@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/iamshubha/golang-postgresql/pkg/model"
 	"github.com/iamshubha/golang-postgresql/pkg/util"
 )
@@ -46,12 +47,7 @@ func StartWorking(w http.ResponseWriter, r *http.Request) {
 
 func StopWorking(w http.ResponseWriter, r *http.Request) {
 
-	type stopWork struct {
-		Id     int `json:"id"`
-		UserId int `json:"userid"`
-	}
-
-	golemodel := stopWork{}
+	golemodel := model.IdAndUserid{}
 	db := util.GetDB()
 	defer db.Close()
 	err := json.NewDecoder(r.Body).Decode(&golemodel)
@@ -79,5 +75,62 @@ func StopWorking(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "success",
+	})
+}
+
+func GetWorkiteams(w http.ResponseWriter, r *http.Request) {
+
+	urlData := mux.Vars(r)
+	id, ok := urlData["id"]
+	if !ok {
+		log.Println(ok)
+	}
+	// log.Println(data, goleDetailsModel)
+	db := util.GetDB()
+	defer db.Close()
+	sqlQuery := `
+	SELECT * FROM goletable WHERE userid =$1;
+	`
+	dataRows, err := db.Query(sqlQuery, id)
+	if err != nil {
+		log.Println(err)
+	}
+	defer dataRows.Close()
+	data := make([]model.GoleDetails, 0)
+	for dataRows.Next() {
+		goleDetailsModel := model.GoleDetails{}
+		dataRows.Scan(&goleDetailsModel.Id, &goleDetailsModel.Userid, &goleDetailsModel.Workon, &goleDetailsModel.Starttime, &goleDetailsModel.Stoptime, &goleDetailsModel.Total)
+		data = append(data, goleDetailsModel)
+	}
+	log.Println(data)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "data found",
+		"data":    data,
+	})
+}
+
+func DeleteWorking(w http.ResponseWriter, r *http.Request) {
+	userdetails := model.IdAndUserid{}
+	err := json.NewDecoder(r.Body).Decode(&userdetails)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	sqlQuery := `
+	DELETE FROM goletable
+	WHERE  userid = $1 AND id = $2;
+	`
+
+	db := util.GetDB()
+	defer db.Close()
+	_, err = db.Exec(sqlQuery, userdetails.UserId, userdetails.Id)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Success",
 	})
 }

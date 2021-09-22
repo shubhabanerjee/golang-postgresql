@@ -110,3 +110,43 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(d)
 
 }
+
+func ForgetPassword(w http.ResponseWriter, r *http.Request) {
+	sqlQuery := `
+	UPDATE userlogin SET password = $2 WHERE username = $1;
+	`
+	db := util.GetDB()
+	defer db.Close()
+	creds := &model.Credentials{}
+	err := json.NewDecoder(r.Body).Decode(creds)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Fatal(err)
+		return
+
+	}
+	if creds.Password == "" || creds.Username == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Invalid request",
+		})
+		return
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.Password), 8) //bcrypt.GenerateFromPassword([]byte(creds.Password), 8)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// uid := model.UserSignupResponse{}
+	_, err = db.Query(sqlQuery, creds.Username, string(hashedPassword))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Fatal(err)
+	}
+	// uid.Message = "Signup Success"
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"Message": "Password reset Success",
+	})
+
+}

@@ -11,7 +11,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-
 func main() {
 	db := util.GetDB()
 	util.InitDB(db)
@@ -25,6 +24,7 @@ func main() {
 	router.HandleFunc("/GetNoteFromBucket/id:{id}/bucket:{bucket}", task.GetTaskFromBucket).Methods(http.MethodGet)
 	router.HandleFunc("/login", user.LoginHandler).Methods(http.MethodPost)
 	router.HandleFunc("/signup", user.Signup).Methods(http.MethodPost)
+	router.HandleFunc("/forgetPassword", user.ForgetPassword).Methods(http.MethodPost)
 	router.HandleFunc("/startWorking", gole.StartWorking).Methods(http.MethodPost)
 	router.HandleFunc("/stopWorking", gole.StopWorking).Methods(http.MethodPost)
 	http.ListenAndServe(":8080", router)

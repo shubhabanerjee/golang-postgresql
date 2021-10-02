@@ -137,13 +137,11 @@ func ForgetPassword(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	// uid := model.UserSignupResponse{}
 	_, err = db.Query(sqlQuery, creds.Username, string(hashedPassword))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Fatal(err)
 	}
-	// uid.Message = "Signup Success"
 
 	json.NewEncoder(w).Encode(map[string]string{
 		"Message": "Password reset Success",

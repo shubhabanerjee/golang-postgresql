@@ -85,7 +85,6 @@ func GetWorkiteams(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		log.Println(ok)
 	}
-	// log.Println(data, goleDetailsModel)
 	db := util.GetDB()
 	defer db.Close()
 	sqlQuery := `
